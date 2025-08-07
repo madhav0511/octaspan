@@ -1,0 +1,577 @@
+import React, { useState, useEffect } from 'react';
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInWithCustomToken, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { Home, Newspaper, MessageSquare, User, Lock, Mail, Phone, Bot, Download, Calendar, Users } from 'lucide-react'; // Using lucide-react for icons
+
+// Initialize Firebase (replace with your actual Firebase config from Canvas environment)
+// These global variables are provided by the Canvas environment.
+const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// Helper to convert Firestore timestamp to readable date
+const formatTimestamp = (timestamp) => {
+  if (!timestamp) return 'N/A';
+  const date = timestamp.toDate();
+  return date.toLocaleString();
+};
+
+// --- Components ---
+
+// Navigation Component
+const Navbar = ({ currentPage, setCurrentPage, user }) => {
+  const navItems = [
+    { name: 'Home', icon: Home, page: 'home' },
+    { name: 'Blog', icon: Newspaper, page: 'blog' },
+    { name: 'Contact', icon: Mail, page: 'contact' },
+  ];
+
+  return (
+    <nav className="bg-gray-800 p-4 shadow-lg">
+      <div className="container mx-auto flex flex-wrap justify-between items-center">
+        <div className="text-white text-2xl font-bold rounded-md px-3 py-1 bg-blue-600">
+          CyberShield Solutions
+        </div>
+        <div className="flex space-x-4 mt-2 md:mt-0">
+          {navItems.map((item) => (
+            <button
+              key={item.name}
+              onClick={() => setCurrentPage(item.page)}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors duration-200
+                ${currentPage === item.page ? 'bg-blue-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+            >
+              <item.icon size={20} />
+              <span>{item.name}</span>
+            </button>
+          ))}
+          {user ? (
+            <button
+              onClick={() => setCurrentPage('dashboard')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors duration-200
+                ${currentPage === 'dashboard' ? 'bg-blue-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+            >
+              <User size={20} />
+              <span>Dashboard ({user.email || 'Guest'})</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setCurrentPage('login')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors duration-200
+                ${currentPage === 'login' ? 'bg-blue-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+            >
+              <Lock size={20} />
+              <span>Login/Signup</span>
+            </button>
+          )}
+        </div>
+      </div>
+    </nav>
+  );
+};
+
+// Home Page Component
+const HomePage = () => (
+  <div className="p-8 bg-gray-900 text-white min-h-screen">
+    <div className="container mx-auto">
+      <h1 className="text-5xl font-extrabold mb-6 text-blue-400">Welcome to CyberShield Solutions</h1>
+      <p className="text-xl mb-8 leading-relaxed">
+        Your trusted partner in digital defense. We provide cutting-edge cybersecurity solutions to protect your business from evolving threats. From proactive threat intelligence to rapid incident response, we ensure your digital assets are secure.
+      </p>
+
+      <div className="grid md:grid-cols-2 gap-8 mb-12">
+        <div className="bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-700">
+          <h2 className="text-3xl font-bold mb-4 text-blue-300 flex items-center"><Lock className="mr-3" />Our Expertise</h2>
+          <ul className="list-disc list-inside text-lg space-y-2">
+            <li>Network Security & Firewalls</li>
+            <li>Endpoint Protection</li>
+            <li>Cloud Security Solutions</li>
+            <li>Data Encryption & Privacy</li>
+            <li>Incident Response & Recovery</li>
+            <li>Security Audits & Compliance</li>
+          </ul>
+        </div>
+        <div className="bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-700">
+          <h2 className="text-3xl font-bold mb-4 text-blue-300 flex items-center"><Newspaper className="mr-3" />Latest Insights</h2>
+          <p className="text-lg mb-4">
+            Stay informed with our latest articles on cybersecurity trends, threats, and best practices.
+          </p>
+          <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-md transition-colors duration-300 shadow-md">
+            Read Our Blog
+          </button>
+        </div>
+      </div>
+
+      {/* Newsletter Subscription */}
+      <div className="bg-gradient-to-r from-blue-700 to-purple-800 p-8 rounded-lg shadow-2xl text-center mb-12">
+        <h2 className="text-4xl font-bold mb-4 text-white">Subscribe to Our Newsletter</h2>
+        <p className="text-xl mb-6 text-blue-100">
+          Get the latest cybersecurity news, tips, and exclusive insights directly to your inbox.
+        </p>
+        <form className="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-4">
+          <input
+            type="email"
+            placeholder="Enter your email address"
+            className="w-full md:w-1/2 p-4 rounded-md bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-300 shadow-inner"
+            required
+          />
+          <button
+            type="submit"
+            className="bg-white text-blue-700 hover:bg-gray-200 font-bold py-4 px-8 rounded-md transition-colors duration-300 shadow-lg"
+          >
+            Subscribe Now
+          </button>
+        </form>
+      </div>
+
+      {/* WhatsApp Link for Business Queries */}
+      <div className="text-center mb-12">
+        <h2 className="text-4xl font-bold mb-4 text-blue-400">Have Business Queries?</h2>
+        <p className="text-xl mb-6 text-gray-300">
+          Connect with our experts instantly via WhatsApp for quick assistance and personalized solutions.
+        </p>
+        <a
+          href="https://wa.me/919876543210" // Replace with your actual WhatsApp number
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 rounded-md transition-colors duration-300 shadow-lg text-xl"
+        >
+          <Phone size={24} className="mr-3" />
+          Chat on WhatsApp
+        </a>
+      </div>
+
+      {/* Chatbot Placeholder */}
+      <div className="bg-gray-800 p-8 rounded-lg shadow-xl border border-gray-700 text-center">
+        <h2 className="text-4xl font-bold mb-4 text-blue-300 flex items-center justify-center"><Bot className="mr-3" />Need Quick Answers?</h2>
+        <p className="text-xl mb-6 text-gray-300">
+          Our AI-powered chatbot is here to assist you with common questions.
+        </p>
+        <button className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-md transition-colors duration-300 shadow-md">
+          Launch Chatbot
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+// Blog Page Component
+const BlogPage = ({ user }) => {
+  const [articles, setArticles] = useState([]);
+  const [newComment, setNewComment] = useState('');
+  const [selectedArticleId, setSelectedArticleId] = useState(null);
+  const [comments, setComments] = useState({}); // Stores comments for each article
+
+  useEffect(() => {
+    // Fetch articles
+    const q = query(collection(db, `artifacts/${appId}/public/data/articles`), orderBy('timestamp', 'desc'));
+    const unsubscribeArticles = onSnapshot(q, (snapshot) => {
+      const articlesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setArticles(articlesData);
+    }, (error) => {
+      console.error("Error fetching articles:", error);
+    });
+
+    return () => unsubscribeArticles();
+  }, []);
+
+  useEffect(() => {
+    // Fetch comments for the selected article
+    if (selectedArticleId) {
+      const commentsRef = collection(db, `artifacts/${appId}/public/data/articles/${selectedArticleId}/comments`);
+      const q = query(commentsRef, orderBy('timestamp'));
+      const unsubscribeComments = onSnapshot(q, (snapshot) => {
+        const commentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setComments(prev => ({ ...prev, [selectedArticleId]: commentsData }));
+      }, (error) => {
+        console.error("Error fetching comments:", error);
+      });
+      return () => unsubscribeComments();
+    }
+  }, [selectedArticleId]);
+
+  const handleAddComment = async () => {
+    if (!user) {
+      alert('Please log in to comment.'); // Using alert for simplicity as per instructions, but a modal would be better.
+      return;
+    }
+    if (newComment.trim() === '' || !selectedArticleId) return;
+
+    try {
+      await addDoc(collection(db, `artifacts/${appId}/public/data/articles/${selectedArticleId}/comments`), {
+        text: newComment,
+        author: user.email || user.uid,
+        timestamp: serverTimestamp(),
+        userId: user.uid,
+      });
+      setNewComment('');
+    } catch (e) {
+      console.error("Error adding comment: ", e);
+      alert("Failed to add comment. Please try again.");
+    }
+  };
+
+  return (
+    <div className="p-8 bg-gray-900 text-white min-h-screen">
+      <div className="container mx-auto">
+        <h1 className="text-5xl font-extrabold mb-8 text-blue-400">Our Technical Blog & Insights</h1>
+
+        {articles.length === 0 ? (
+          <p className="text-lg text-gray-400">No articles available yet. Check back soon!</p>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {articles.map((article) => (
+              <div key={article.id} className="bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-700">
+                <h2 className="text-2xl font-bold mb-3 text-blue-300">{article.title}</h2>
+                <p className="text-gray-400 text-sm mb-4">Published: {formatTimestamp(article.timestamp)}</p>
+                <p className="text-lg mb-4 leading-relaxed">{article.content.substring(0, 150)}...</p>
+                <button
+                  onClick={() => setSelectedArticleId(article.id)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-300"
+                >
+                  Read More & Comment
+                </button>
+
+                {selectedArticleId === article.id && (
+                  <div className="mt-6 border-t border-gray-700 pt-6">
+                    <h3 className="text-xl font-bold mb-4 text-blue-200">Comments</h3>
+                    {comments[article.id] && comments[article.id].length > 0 ? (
+                      <div className="space-y-4">
+                        {comments[article.id].map((comment) => (
+                          <div key={comment.id} className="bg-gray-700 p-4 rounded-lg">
+                            <p className="text-gray-300 font-semibold">{comment.author}</p>
+                            <p className="text-gray-400 text-sm">{formatTimestamp(comment.timestamp)}</p>
+                            <p className="mt-2 text-lg">{comment.text}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-400">No comments yet. Be the first!</p>
+                    )}
+
+                    <div className="mt-6">
+                      <textarea
+                        className="w-full p-3 rounded-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        rows="3"
+                        placeholder="Write your comment here..."
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                      ></textarea>
+                      <button
+                        onClick={handleAddComment}
+                        className="mt-3 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-300"
+                      >
+                        Submit Comment
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Contact Page Component
+const ContactPage = () => (
+  <div className="p-8 bg-gray-900 text-white min-h-screen">
+    <div className="container mx-auto">
+      <h1 className="text-5xl font-extrabold mb-8 text-blue-400">Contact Us</h1>
+      <p className="text-xl mb-8 leading-relaxed text-gray-300">
+        We're here to help you with your cybersecurity needs. Reach out to us through the form below, or use our direct contact methods.
+      </p>
+
+      <div className="grid md:grid-cols-2 gap-8">
+        <div className="bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-700">
+          <h2 className="text-3xl font-bold mb-4 text-blue-300">Send Us a Message</h2>
+          <form className="space-y-4">
+            <div>
+              <label htmlFor="name" className="block text-lg font-medium text-gray-300 mb-2">Your Name</label>
+              <input
+                type="text"
+                id="name"
+                className="w-full p-3 rounded-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="John Doe"
+              />
+            </div>
+            <div>
+              <label htmlFor="email" className="block text-lg font-medium text-gray-300 mb-2">Your Email</label>
+              <input
+                type="email"
+                id="email"
+                className="w-full p-3 rounded-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="john.doe@example.com"
+              />
+            </div>
+            <div>
+              <label htmlFor="message" className="block text-lg font-medium text-gray-300 mb-2">Your Message</label>
+              <textarea
+                id="message"
+                rows="5"
+                className="w-full p-3 rounded-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Type your message here..."
+              ></textarea>
+            </div>
+            <button
+              type="submit"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-md transition-colors duration-300 shadow-md"
+            >
+              Send Message
+            </button>
+          </form>
+        </div>
+
+        <div className="bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-700">
+          <h2 className="text-3xl font-bold mb-4 text-blue-300">Direct Contact</h2>
+          <div className="space-y-4 text-lg">
+            <p className="flex items-center"><Mail className="mr-3" size={24} /> Email: info@cybershield.com</p>
+            <p className="flex items-center"><Phone className="mr-3" size={24} /> Phone: +91 98765 43210</p>
+            <p className="flex items-center"><MessageSquare className="mr-3" size={24} /> WhatsApp: <a href="https://wa.me/919876543210" target="_blank" rel="noopener noreferrer" className="text-green-400 hover:underline ml-2">+91 98765 43210</a></p>
+            <p className="flex items-center"><Users className="mr-3" size={24} /> Address: 123 Cyber Street, Tech City, India</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// Login/Signup Component
+const AuthPage = ({ setUser, setCurrentPage }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLogin, setIsLogin] = useState(true);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleAuth = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      let userCredential;
+      if (isLogin) {
+        userCredential = await signInWithEmailAndPassword(auth, email, password);
+      } else {
+        userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      }
+      setUser(userCredential.user);
+      setCurrentPage('dashboard'); // Redirect to dashboard or home after successful auth
+    } catch (e) {
+      setError(e.message);
+      console.error("Auth error:", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="p-8 bg-gray-900 text-white min-h-screen flex items-center justify-center">
+      <div className="bg-gray-800 p-8 rounded-lg shadow-xl border border-gray-700 w-full max-w-md">
+        <h2 className="text-3xl font-bold mb-6 text-blue-300 text-center">
+          {isLogin ? 'Login' : 'Sign Up'}
+        </h2>
+        {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="auth-email" className="block text-lg font-medium text-gray-300 mb-2">Email</label>
+            <input
+              type="email"
+              id="auth-email"
+              className="w-full p-3 rounded-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="your.email@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div>
+            <label htmlFor="auth-password" className="block text-lg font-medium text-gray-300 mb-2">Password</label>
+            <input
+              type="password"
+              id="auth-password"
+              className="w-full p-3 rounded-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="********"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          <button
+            onClick={handleAuth}
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-md transition-colors duration-300 shadow-md disabled:opacity-50"
+          >
+            {loading ? 'Processing...' : (isLogin ? 'Login' : 'Sign Up')}
+          </button>
+        </div>
+        <p className="mt-6 text-center text-gray-400">
+          {isLogin ? "Don't have an account?" : "Already have an account?"}{' '}
+          <button
+            onClick={() => setIsLogin(!isLogin)}
+            className="text-blue-400 hover:underline font-semibold"
+          >
+            {isLogin ? 'Sign Up' : 'Login'}
+          </button>
+        </p>
+      </div>
+    </div>
+  );
+};
+
+// User Dashboard Component
+const DashboardPage = ({ user, setCurrentPage, setUser }) => {
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setUser(null);
+      setCurrentPage('home'); // Redirect to home after logout
+    } catch (e) {
+      console.error("Logout error:", e);
+      alert("Failed to log out. Please try again.");
+    }
+  };
+
+  return (
+    <div className="p-8 bg-gray-900 text-white min-h-screen">
+      <div className="container mx-auto">
+        <h1 className="text-5xl font-extrabold mb-8 text-blue-400">Welcome to Your Dashboard, {user?.email || user?.uid}</h1>
+        <p className="text-xl mb-8 leading-relaxed text-gray-300">
+          This is your personalized space. Here you can manage your profile, view exclusive resources, and track your activity.
+        </p>
+
+        <div className="grid md:grid-cols-2 gap-8 mb-12">
+          <div className="bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-700">
+            <h2 className="text-3xl font-bold mb-4 text-blue-300 flex items-center"><User className="mr-3" />Profile Information</h2>
+            <p className="text-lg mb-2">Email: {user?.email || 'N/A'}</p>
+            <p className="text-lg mb-2">User ID: {user?.uid || 'N/A'}</p>
+            {/* Add more profile details here */}
+          </div>
+          <div className="bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-700">
+            <h2 className="text-3xl font-bold mb-4 text-blue-300 flex items-center"><Download className="mr-3" />Exclusive Resources</h2>
+            <p className="text-lg mb-4">
+              Download our latest whitepapers, security guides, and tools.
+            </p>
+            <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-md transition-colors duration-300 shadow-md">
+              Access Resources
+            </button>
+          </div>
+        </div>
+
+        <button
+          onClick={handleLogout}
+          className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-md transition-colors duration-300 shadow-md"
+        >
+          Logout
+        </button>
+      </div>
+    </div>
+  );
+};
+
+
+// Main App Component
+const App = () => {
+  const [currentPage, setCurrentPage] = useState('home');
+  const [user, setUser] = useState(null);
+  const [isAuthReady, setIsAuthReady] = useState(false);
+
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+      } else {
+        // Attempt anonymous sign-in if no user and no initial token (for public access)
+        if (!initialAuthToken) {
+          try {
+            await signInAnonymously(auth);
+          } catch (e) {
+            console.error("Anonymous sign-in failed:", e);
+          }
+        }
+      }
+      setIsAuthReady(true);
+    });
+
+    // Sign in with custom token if provided (Canvas environment)
+    const signInWithCanvasToken = async () => {
+      if (initialAuthToken && !user) { // Only try if token exists and no user is already signed in
+        try {
+          await signInWithCustomToken(auth, initialAuthToken);
+        } catch (e) {
+          console.error("Custom token sign-in failed:", e);
+        }
+      }
+    };
+
+    signInWithCanvasToken();
+
+    return () => unsubscribeAuth();
+  }, [initialAuthToken, user]); // Depend on initialAuthToken and user to prevent re-runs
+
+  // Placeholder for adding initial blog articles if none exist
+  useEffect(() => {
+    const checkAndAddInitialArticles = async () => {
+      if (isAuthReady) {
+        const articlesRef = collection(db, `artifacts/${appId}/public/data/articles`);
+        const q = query(articlesRef);
+        const snapshot = await getDocs(q);
+
+        if (snapshot.empty) {
+          console.log("No articles found, adding initial articles...");
+          try {
+            await addDoc(articlesRef, {
+              title: "The Rise of AI in Cybersecurity",
+              content: "Artificial intelligence is rapidly transforming the cybersecurity landscape, offering both unprecedented defense capabilities and new attack vectors. This article explores how AI is being leveraged for threat detection, anomaly identification, and automated response, as well as the challenges and ethical considerations involved. We delve into machine learning algorithms used to analyze vast amounts of data, identifying patterns that human analysts might miss. Furthermore, we discuss the dual-use nature of AI, where malicious actors can also harness its power to craft more sophisticated and evasive attacks. Understanding these dynamics is crucial for developing robust future-proof security strategies.",
+              timestamp: serverTimestamp(),
+            });
+            await addDoc(articlesRef, {
+              title: "Protecting Your Cloud Environment",
+              content: "Cloud computing offers immense flexibility and scalability, but it also introduces unique cybersecurity challenges. This article provides essential strategies for securing your cloud infrastructure, data, and applications. We cover topics such as identity and access management (IAM) in the cloud, data encryption at rest and in transit, network segmentation, and continuous monitoring. Best practices for configuring cloud security groups, utilizing cloud-native security tools, and ensuring compliance with industry regulations are also discussed. A strong cloud security posture is vital for businesses leveraging cloud services to mitigate risks and maintain data integrity.",
+              timestamp: serverTimestamp(),
+            });
+            await addDoc(articlesRef, {
+              title: "Understanding Ransomware Attacks",
+              content: "Ransomware remains one of the most pervasive and damaging cyber threats facing organizations worldwide. This article breaks down how ransomware attacks work, from initial infection vectors like phishing emails to data encryption and ransom demands. We explore the different types of ransomware, common attack techniques, and the devastating impact these attacks can have on businesses, including financial losses, operational disruption, and reputational damage. Crucially, we provide actionable advice on prevention strategies, such as robust backup and recovery plans, employee training, endpoint protection, and incident response protocols to minimize the risk and impact of a ransomware incident.",
+              timestamp: serverTimestamp(),
+            });
+            console.log("Initial articles added successfully.");
+          } catch (e) {
+            console.error("Error adding initial articles:", e);
+          }
+        }
+      }
+    };
+
+    checkAndAddInitialArticles();
+  }, [isAuthReady]); // Run once after auth is ready
+
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'home':
+        return <HomePage />;
+      case 'blog':
+        return <BlogPage user={user} />;
+      case 'contact':
+        return <ContactPage />;
+      case 'login':
+        return <AuthPage setUser={setUser} setCurrentPage={setCurrentPage} />;
+      case 'dashboard':
+        return <DashboardPage user={user} setCurrentPage={setCurrentPage} setUser={setUser} />;
+      default:
+        return <HomePage />;
+    }
+  };
+
+  return (
+    <div className="font-inter antialiased">
+      <Navbar currentPage={currentPage} setCurrentPage={setCurrentPage} user={user} />
+      {renderPage()}
+    </div>
+  );
+};
+
+export default App;
