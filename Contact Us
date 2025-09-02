@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Octaspan - Contact Us</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            @apply bg-zinc-950 text-gray-200;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header class="bg-zinc-950 py-5 sticky top-0 z-50 shadow-lg transition-colors duration-300">
+        <nav class="container mx-auto px-6 flex justify-between items-center">
+            <a href="#" class="flex items-center space-x-3 text-white text-3xl font-bold">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                </svg>
+                <span>Octaspan</span>
+            </a>
+            <div class="hidden md:flex space-x-6 text-base font-medium">
+                <a href="#" class="hover:text-cyan-400 transition-colors">Home</a>
+                <a href="#" class="hover:text-cyan-400 transition-colors">Services</a>
+                <a href="#" class="hover:text-cyan-400 transition-colors">Insights</a>
+                <a href="#" class="hover:text-cyan-400 transition-colors">About</a>
+                <a href="#contact-form" class="px-5 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-full transition-colors">Contact Us</a>
+                <!-- New link for RFP form -->
+                <a href="#rfp-form" class="px-5 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-full transition-colors">Submit RFP</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="bg-zinc-900 text-white py-24 md:py-32 border-b border-zinc-800">
+            <div class="container mx-auto px-6 text-center">
+                <h1 class="text-4xl md:text-6xl font-extrabold leading-tight tracking-tight">
+                    <span class="text-cyan-400">Get in touch.</span> Let's secure your future.
+                </h1>
+                <p class="mt-6 text-lg md:text-xl text-gray-400 max-w-3xl mx-auto">
+                    Whether you have a question about our services or need to address a critical security incident, our team is ready to assist.
+                </p>
+            </div>
+        </section>
+
+        <!-- Contact Form Section -->
+        <section id="contact-form" class="py-20 md:py-24">
+            <div class="container mx-auto px-6 max-w-2xl">
+                <div class="bg-zinc-800 p-8 md:p-12 rounded-2xl shadow-xl">
+                    <h2 class="text-3xl font-bold text-white mb-2">Send Us a Message</h2>
+                    <p class="text-gray-400 mb-8">
+                        Please fill out the form below with your details and inquiry.
+                    </p>
+                    <form action="#" method="POST" class="space-y-6">
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-400">Full Name</label>
+                            <input type="text" id="name" name="name" placeholder="Your Full Name" class="mt-1 block w-full p-3 rounded-md bg-zinc-700 border border-zinc-600 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                        </div>
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-400">Business Email</label>
+                            <input type="email" id="email" name="email" placeholder="Your Business Email" class="mt-1 block w-full p-3 rounded-md bg-zinc-700 border border-zinc-600 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                        </div>
+                        <div>
+                            <label for="subject" class="block text-sm font-medium text-gray-400">Subject</label>
+                            <input type="text" id="subject" name="subject" placeholder="Your inquiry subject" class="mt-1 block w-full p-3 rounded-md bg-zinc-700 border border-zinc-600 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                        </div>
+                        <div>
+                            <label for="message" class="block text-sm font-medium text-gray-400">Message</label>
+                            <textarea id="message" name="message" rows="6" placeholder="Tell us about your needs..." class="mt-1 block w-full p-3 rounded-md bg-zinc-700 border border-zinc-600 focus:outline-none focus:ring-2 focus:ring-cyan-500"></textarea>
+                        </div>
+                        <div class="flex items-center">
+                            <input id="terms" name="terms" type="checkbox" class="h-4 w-4 rounded-md text-cyan-600 bg-zinc-700 border-zinc-600 focus:ring-cyan-500">
+                            <label for="terms" class="ml-2 block text-sm text-gray-400">
+                                I agree to the <a href="#" class="text-cyan-400 hover:underline">Terms and Conditions</a>.
+                            </label>
+                        </div>
+                        <div>
+                            <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-semibold py-3 px-6 rounded-full transition-colors">
+                                Submit Request
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- New RFP Form Section -->
+        <section id="rfp-form" class="py-20 md:py-24">
+            <div class="container mx-auto px-6 max-w-2xl">
+                <div class="bg-zinc-800 p-8 md:p-12 rounded-2xl shadow-xl">
+                    <h2 class="text-3xl font-bold text-white mb-2">Submit a Request for Proposal (RFP)</h2>
+                    <p class="text-gray-400 mb-8">
+                        If you have a detailed project proposal, please use the form below to upload your document. We will review it and get back to you promptly.
+                    </p>
+                    <form action="#" method="POST" class="space-y-6">
+                        <div>
+                            <label for="rfp-file" class="block text-sm font-medium text-gray-400">Upload Your RFP Document</label>
+                            <div class="mt-1 flex justify-center p-6 border-2 border-dashed border-zinc-600 rounded-md">
+                                <div class="space-y-1 text-center">
+                                    <svg class="mx-auto h-12 w-12 text-gray-500" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.26-3.26a2 2 0 00-2.83 0L16 26" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    <div class="flex text-sm text-gray-500">
+                                        <label for="rfp-file" class="relative cursor-pointer rounded-md font-medium text-cyan-400 hover:text-cyan-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-cyan-500">
+                                            <span>Upload a file</span>
+                                            <input id="rfp-file" name="rfp-file" type="file" class="sr-only">
+                                        </label>
+                                        <p class="pl-1">or drag and drop</p>
+                                    </div>
+                                    <p class="text-xs text-gray-500">PDF, DOCX, or TXT up to 10MB</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-semibold py-3 px-6 rounded-full transition-colors">
+                                Submit RFP
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-zinc-950 py-12">
+        <div class="container mx-auto px-6 text-center text-gray-400">
+            <div class="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-8">
+                <a href="#" class="hover:text-white transition-colors">Privacy</a>
+                <a href="#" class="hover:text-white transition-colors">Legal</a>
+                <a href="#careers" class="hover:text-white transition-colors">Careers</a>
+            </div>
+            <div class="mt-8 flex justify-center space-x-6 text-2xl">
+                <!-- Social Media Icons (SVGs are placeholders) -->
+                <a href="#" class="hover:text-white transition-colors"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/></svg></a>
+                <a href="#" class="hover:text-white transition-colors"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 5.52 4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm3.2 5.5c.57 0 .97.4.97.97v.03c0 .57-.4.97-.97.97H8.8c-.57 0-.97-.4-.97-.97V8.47c0-.57.4-.97.97-.97h6.4zm0 2.97c.57 0 .97.4.97.97v.03c0 .57-.4.97-.97.97H8.8c-.57 0-.97-.4-.97-.97V11.4c0-.57.4-.97.97-.97h6.4zm0 2.9c.57 0 .97.4.97.97v.03c0 .57-.4.97-.97.97H8.8c-.57 0-.97-.4-.97-.97V14.3c0-.57.4-.97.97-.97h6.4z"/></svg></a>
+                <a href="#" class="hover:text-white transition-colors"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2v-2.3c0-2.38 1.4-3.68 3.56-3.68C14.52 9 16 9.17 16 9.17V12h-1.5c-1.84 0-2 1.15-2 2.2V15h3l-.5 3h-2.5v6c4.84-1 8-5.32 8-9.8z"/></svg></a>
+            </div>
+            <p class="mt-8 text-sm">
+                &copy; 2024 Octaspan Cybersecurity. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+</body>
+</html>
